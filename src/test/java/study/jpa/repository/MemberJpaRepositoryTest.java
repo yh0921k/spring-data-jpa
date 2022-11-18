@@ -62,6 +62,21 @@ class MemberJpaRepositoryTest {
     // 카운트 검증
     long deletedCount = memberJpaRepository.count();
     assertThat(deletedCount).isEqualTo(0);
+  }
 
+  @Test
+  public void findByUsernameAndAgeGreaterThen() {
+    Member memberA = new Member("AAA", 10);
+    Member memberB = new Member("AAA", 20);
+
+    memberJpaRepository.save(memberA);
+    memberJpaRepository.save(memberB);
+
+    List<Member> members = memberJpaRepository.findByUsernameAndAgeGreaterThan("AAA", 15);
+
+    assertThat(members.get(0).getUsername()).isEqualTo("AAA");
+    assertThat(members.get(0).getAge()).isEqualTo(20);
+    assertThat(members.size()).isEqualTo(1);
   }
 }
+
