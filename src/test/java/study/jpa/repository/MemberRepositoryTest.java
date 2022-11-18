@@ -11,6 +11,7 @@ import study.jpa.entity.Team;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -154,5 +155,24 @@ class MemberRepositoryTest {
 
     assertThat(members.get(0).getUsername()).isEqualTo("AAA");
     assertThat(members.get(1).getUsername()).isEqualTo("BBB");
+  }
+
+  @Test
+  public void returnType() {
+    Member memberA = new Member("AAA", 10);
+    Member memberB = new Member("BBB", 20);
+
+    memberRepository.save(memberA);
+    memberRepository.save(memberB);
+
+    List<Member> listByUsername = memberRepository.findListByUsername("AAA");
+    assertThat(listByUsername.get(0).getUsername()).isEqualTo("AAA");
+
+    Member memberByUsername = memberRepository.findMemberByUsername("AAA");
+    assertThat(memberByUsername.getUsername()).isEqualTo("AAA");
+
+    Optional<Member> optionalByUsername = memberRepository.findOptionalByUsername("BBB");
+    assertThat(optionalByUsername.get().getUsername()).isEqualTo("BBB");
+
   }
 }
