@@ -3,6 +3,10 @@ package study.jpa.repository;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Slice;
+import org.springframework.data.domain.Sort;
 import org.springframework.test.annotation.Rollback;
 import org.springframework.transaction.annotation.Transactional;
 import study.jpa.dto.MemberDto;
@@ -174,5 +178,82 @@ class MemberRepositoryTest {
     Optional<Member> optionalByUsername = memberRepository.findOptionalByUsername("BBB");
     assertThat(optionalByUsername.get().getUsername()).isEqualTo("BBB");
 
+  }
+
+  @Test
+  public void paging() {
+    // given
+    memberRepository.save(new Member("member1", 10));
+    memberRepository.save(new Member("member2", 10));
+    memberRepository.save(new Member("member3", 10));
+    memberRepository.save(new Member("member4", 10));
+    memberRepository.save(new Member("member5", 10));
+    memberRepository.save(new Member("member6", 10));
+    memberRepository.save(new Member("member7", 10));
+    memberRepository.save(new Member("member8", 10));
+
+    int age = 10;
+    PageRequest pageRequest = PageRequest.of(0, 3, Sort.by(Sort.Direction.DESC, "username"));
+
+    // when
+    Page<Member> page = memberRepository.findByAge(age, pageRequest);
+
+    Page<MemberDto> toMap = page.map(m -> new MemberDto(m.getId(), m.getUsername(), ""));
+
+    // then
+    List<Member> content = page.getContent();
+    assertThat(content.get(0).getUsername()).isEqualTo("member8");
+    assertThat(content.get(1).getUsername()).isEqualTo("member7");
+
+    long totalElements = page.getTotalElements();
+    assertThat(totalElements).isEqualTo(8);
+
+    assertThat(page.getNumber()).isEqualTo(0);
+    assertThat(page.getTotalPages()).isEqualTo(3);
+    assertThat(page.isFirst()).isTrue();
+    assertThat(page.hasNext()).isTrue();
+  }
+
+  @Test
+  public void slice() {
+    // given
+    memberRepository.save(new Member("member1", 10));
+    memberRepository.save(new Member("member2", 10));
+    memberRepository.save(new Member("member3", 10));
+    memberRepository.save(new Member("member4", 10));
+    memberRepository.save(new Member("member5", 10));
+    memberRepository.save(new Member("member6", 10));
+    memberRepository.save(new Member("member7", 10));
+    memberRepository.save(new Member("member8", 10));
+
+    int age = 10;
+    PageRequest pageRequest = PageRequest.of(0, 3, Sort.by(Sort.Direction.DESC, "username"));
+
+    // when
+    Slice<Member> page = memberRepository.findSliceByAge(age, pageRequest);
+
+    // then
+    List<Member> content = page.getContent();
+    assertThat(content.get(0).getUsername()).isEqualTo("member8");
+    assertThat(content.get(1).getUsername()).isEqualTo("member7");
+
+    assertThat(page.getNumber()).isEqualTo(0);
+    assertThat(page.isFirst()).isTrue();
+    assertThat(page.hasNext()).isTrue();
+  }
+
+  @Test
+  public void separateCountQuery() {
+    // given
+    memberRepository.save(new Member("member1", 10));
+    memberRepository.save(new Member("member2", 10));
+    memberRepository.save(new Member("member3", 10));
+    memberRepository.save(new Member("member4", 10));
+
+    PageRequest pageRequest = PageRequest.of(0, 3, Sort.by(Sort.Direction.DESC, "username"));
+
+    // when
+    Page<Member> page = memberRepository.findMemberAllCountBy(pageRequest);
+    assertThat(page.getTotalElements()).isEqualTo(4);
   }
 }
