@@ -332,4 +332,32 @@ class MemberRepositoryTest {
       System.out.println("member.getTeam().getName() = " + member.getTeam().getName());
     }
   }
+
+  @Test
+  public void queryHint() {
+
+    // given
+    Member member1 = new Member("Member1", 10);
+    memberRepository.save(member1);
+    em.flush(); // 영속성 컨텍스트에는 데이터가 남아있음
+    em.clear(); // 영속성 컨텍스트 초기화(1차 캐시 없음)
+
+    // when
+    Member findMember = memberRepository.findReadOnlyByUsername("Member1");
+    findMember.setUsername("Member2");
+    em.flush(); // 변경 감지가 동작하지 않으며, 내부적으로 스냅샷을 만들지 않음
+  }
+
+  @Test
+  public void lock() {
+
+    // given
+    Member member1 = new Member("Member1", 10);
+    memberRepository.save(member1);
+    em.flush();
+    em.clear();
+
+    // when
+    List<Member> members = memberRepository.findLockByUsername("Member1");
+  }
 }
