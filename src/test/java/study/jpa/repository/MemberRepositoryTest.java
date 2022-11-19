@@ -13,6 +13,8 @@ import study.jpa.dto.MemberDto;
 import study.jpa.entity.Member;
 import study.jpa.entity.Team;
 
+import javax.persistence.EntityManager;
+import javax.persistence.PersistenceContext;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
@@ -26,6 +28,7 @@ class MemberRepositoryTest {
 
   @Autowired MemberRepository memberRepository;
   @Autowired TeamRepository teamRepository;
+  @PersistenceContext EntityManager em;
 
   @Test
   public void testMember() {
@@ -71,7 +74,6 @@ class MemberRepositoryTest {
     // 카운트 검증
     long deletedCount = memberRepository.count();
     assertThat(deletedCount).isEqualTo(0);
-
   }
 
   @Test
@@ -177,7 +179,6 @@ class MemberRepositoryTest {
 
     Optional<Member> optionalByUsername = memberRepository.findOptionalByUsername("BBB");
     assertThat(optionalByUsername.get().getUsername()).isEqualTo("BBB");
-
   }
 
   @Test
@@ -274,5 +275,61 @@ class MemberRepositoryTest {
     // then
     assertThat(resultCount).isEqualTo(3);
     assertThat(findMembers.get(0).getAge()).isEqualTo(41);
+  }
+
+  @Test
+  public void findMemberLazy() {
+    
+    // given
+    Team teamA = new Team("TeamA");
+    Team teamB = new Team("TeamB");
+    teamRepository.save(teamA);
+    teamRepository.save(teamB);
+
+    Member member1 = new Member("Member1", 10, teamA);
+    Member member2 = new Member("Member2", 10, teamB);
+    memberRepository.save(member1);
+    memberRepository.save(member2);
+
+    em.flush();
+    em.clear();
+    
+    // when
+    List<Member> members = memberRepository.findAll();
+    for (Member member : members) {
+      System.out.println("member.getUsername() = " + member.getUsername());
+
+      // Team 조회를 위한 추가 쿼리 발생(N + 1)
+      System.out.println("member.getTeam().getClass() = " + member.getTeam().getClass());
+      System.out.println("member.getTeam().getName() = " + member.getTeam().getName());
+    }
+  }
+
+  @Test
+  public void findMemberFetchJoin() {
+
+    // given
+    Team teamA = new Team("TeamA");
+    Team teamB = new Team("TeamB");
+    teamRepository.save(teamA);
+    teamRepository.save(teamB);
+
+    Member member1 = new Member("Member1", 10, teamA);
+    Member member2 = new Member("Member2", 10, teamB);
+    memberRepository.save(member1);
+    memberRepository.save(member2);
+
+    em.flush();
+    em.clear();
+
+    // when
+    List<Member> members = memberRepository.findMemberFetchJoin();
+    for (Member member : members) {
+      System.out.println("member.getUsername() = " + member.getUsername());
+
+      // Team 조회를 위한 추가 쿼리 발생(N + 1)
+      System.out.println("member.getTeam().getClass() = " + member.getTeam().getClass());
+      System.out.println("member.getTeam().getName() = " + member.getTeam().getName());
+    }
   }
 }
