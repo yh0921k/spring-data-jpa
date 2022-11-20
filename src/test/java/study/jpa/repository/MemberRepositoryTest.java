@@ -360,4 +360,18 @@ class MemberRepositoryTest {
     // when
     List<Member> members = memberRepository.findLockByUsername("Member1");
   }
+
+  @Test
+  public void callCustom() {
+    Member member1 = new Member("Member1", 10);
+    memberRepository.save(member1);
+
+    em.flush();
+    em.clear();
+
+    List<Member> memberCustom = memberRepository.findMemberCustom();
+    for (Member member : memberCustom) {
+      System.out.println("member = " + member);
+    }
+  }
 }
