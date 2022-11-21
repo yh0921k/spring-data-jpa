@@ -424,4 +424,25 @@ class MemberRepositoryTest {
     // then
     assertThat(result.size()).isEqualTo(1);
   }
+
+  @Test
+  public void projections() {
+    // given
+    Team team = new Team("TeamA");
+    em.persist(team);
+
+    Member m1 = new Member("m1", 0, team);
+    Member m2 = new Member("m2", 0, team);
+    em.persist(m1);
+    em.persist(m2);
+
+    em.flush();
+    em.clear();
+
+    List<NestedClosedProjections> result = memberRepository.findProjectionsByUsername("m1", NestedClosedProjections.class);
+    for (NestedClosedProjections nestedClosedProjections : result) {
+      System.out.println("nestedClosedProjections.getUsername() = " + nestedClosedProjections.getUsername());
+      System.out.println("nestedClosedProjections.getTeam().getName() = " + nestedClosedProjections.getTeam().getName());
+    }
+  }
 }
